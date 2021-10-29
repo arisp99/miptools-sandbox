@@ -26,7 +26,41 @@ From: amd64/ubuntu:20.04
     apt-get update \
     && apt-get -yq dist-upgrade \
     && apt-get install -yq --no-install-recommends \
-    wget
+    wget \
+    bzip2 \
+    ca-certificates \
+    sudo \
+    locales \
+    fonts-liberation \
+    fonts-dejavu \
+    git \
+    build-essential \
+    gcc \
+    openssh-client \
+    nano \
+    libtbb-dev \
+    libz-dev \
+    libxrender1 \
+    cmake \
+    automake \
+    autoconf \
+    rsync \
+    pigz \
+    perl-tk \
+    less \
+    software-properties-common \
+    libxext6 \
+    libxrender1 \
+    ghostscript \
+    openjdk-11-jdk \
+    liblzma-dev \
+    libbz2-dev \
+    libssl-dev \
+    libcurl4-gnutls-dev \
+    alien \
+    unzip \
+    tree \
+    pandocls
 
     # set environment locale
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
