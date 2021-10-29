@@ -313,8 +313,9 @@ From: amd64/ubuntu:20.04
     fi
     
     # Read data from config file
-    mapfile -t config <${config_path}
-    
+    while read -r; do 
+        config+=('$REPLY'); 
+    done <${config_path}
     # Remove whitespace from each line and export each line as a variable
     export BASESPACE_API_SERVER=$(echo ${config[0]} | sed 's/.*=.//g')
     export BASESPACE_ACCESS_TOKEN=$(echo ${config[1]} | sed 's/.*=.//g')
