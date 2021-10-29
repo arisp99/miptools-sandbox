@@ -12,9 +12,6 @@ From: amd64/ubuntu:20.04
 ##                         Post Section                         ##
 ##################################################################
 %post
-    # set number of cpus to use in build
-    CPU_COUNT=20
-
     # set build environment
     export DEBIAN_FRONTEND=noninteractive \
         CONDA_DIR=/opt/conda \
@@ -29,41 +26,7 @@ From: amd64/ubuntu:20.04
     apt-get update \
     && apt-get -yq dist-upgrade \
     && apt-get install -yq --no-install-recommends \
-    wget \
-    bzip2 \
-    ca-certificates \
-    sudo \
-    locales \
-    fonts-liberation \
-    fonts-dejavu \
-    git \
-    build-essential \
-    gcc \
-    openssh-client \
-    nano \
-    libtbb-dev \
-    libz-dev \
-    libxrender1 \
-    cmake \
-    automake \
-    autoconf \
-    rsync \
-    pigz \
-    perl-tk \
-    less \
-    software-properties-common \
-    libxext6 \
-    libxrender1 \
-    ghostscript \
-    openjdk-11-jdk \
-    liblzma-dev \
-    libbz2-dev \
-    libssl-dev \
-    libcurl4-gnutls-dev \
-    alien \
-    unzip \
-    tree \
-    pandoc
+    wget
 
     # set environment locale
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
@@ -72,18 +35,6 @@ From: amd64/ubuntu:20.04
     echo "LANGUAGE=en_US.UTF-8" >> /etc/environment
     locale-gen en_US.UTF-8
     update-locale LANG=en_US.UTF-8
-
-    # install bcl2fastq, if the file is there
-    cd /opt/programs
-    unzip bcl2fastq2*.zip || true
-    alien bcl2fastq2*.rpm || true
-    dpkg -i bcl2fastq2*.deb || true
-
-    # install msa2vcf
-    cd /opt/programs
-    git clone https://github.com/lindenb/jvarkit.git
-    cd jvarkit
-    ./gradlew msa2vcf
 
     # install conda
     cd /tmp && \
@@ -101,90 +52,6 @@ From: amd64/ubuntu:20.04
 
     # install mamba
     conda install mamba -c conda-forge
-
-    # install conda packages using mamba
-    mamba install -qy\
-      "r" \
-      "r-epitools" \
-      "rpy2" \
-      "r-irkernel" \
-      "r-plotly" \
-      "r-knitr" \
-      "r-shiny" \
-      "r-ggplot2" \
-      "r-devtools" \
-      "r-dplyr" \
-      "r-dt" \
-      "r-pkgbuild" \
-      "gxx_linux-64" \
-      "python" \
-      "notebook" \
-      "nbconvert" \
-      "jupyter_contrib_nbextensions" \
-      "xlrd" \
-      "bcftools" \
-      "samtools" \
-      "vcftools" \
-      "htslib" \
-      "bwa" \
-      "bowtie2" \
-      "primer3" \
-      "primer3-py" \
-      "numpy" \
-      "scipy" \
-      "biopython" \
-      "pysam" \
-      "pandas" \
-      "matplotlib" \
-      "seaborn" \
-      "scikit-learn" \
-      "scandir" \
-      "openpyxl" \
-      "simplegeneric" \
-      "matplotlib-venn" \
-      "tblib" \
-      "parallel" \
-      "scikit-allel" \
-      "bioconductor-dnacopy" \
-      "basemap-data-hires" \
-      "seqtk=1.3" \
-      "gatk4" \
-      "freebayes" \
-      "lastz" \
-      "plotly" \
-      "texlive-core" \
-      "libgfortran4"
-
-    # install vt variant tool set
-    cd /opt/programs
-    git clone https://github.com/atks/vt.git
-    cd vt
-    git checkout 0.577
-    make -j $CPU_COUNT
-    scp vt /opt/bin
-
-    # install RealMcCoil
-    # Rscript -e 'devtools::install_github("OJWatson/McCOILR")'
-
-    # install rehh
-    Rscript -e 'install.packages("rehh", repos="https://cloud.r-project.org")'
-
-    # install MIPWrangler
-    cd /opt/programs
-    git clone https://github.com/bailey-lab/MIPWrangler
-    cd MIPWrangler
-    git checkout v1.2.0
-    ./install.sh $CPU_COUNT
-
-    # install elucidator
-    cd /opt/programs
-    git clone https://github.com/nickjhathaway/elucidator
-    cd elucidator
-    git checkout develop
-    ./install.sh $CPU_COUNT
-
-    # install parasight
-    scp /opt/programs/parasight_v7.6/parasight.pl /opt/bin/parasight76.pl
 
     # install basespace cli
     BS_PATH="https://launch.basespace.illumina.com/CLI/latest/amd64-linux/bs"
