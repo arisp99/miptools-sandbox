@@ -91,6 +91,12 @@ From: amd64/ubuntu:20.04
     BS_PATH="https://launch.basespace.illumina.com/CLI/latest/amd64-linux/bs"
     wget $BS_PATH -O /opt/bin/bs
 
+    # install bcl2fastq, if the file is there
+    cd /opt/programs
+    unzip bcl2fastq2*.zip || true
+    alien bcl2fastq2*.rpm || true
+    dpkg -i bcl2fastq2*.deb || true
+
     # add executable flag to executables
     chmod -R +xr /usr/bin
     chmod -R +xr /opt/bin
