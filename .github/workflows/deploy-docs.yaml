@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - "docs/**"
 
 jobs:
   deploy:
@@ -47,15 +49,17 @@ jobs:
           name: html-docs
           path: docs/_build/html/
 
+      # Can deploy using either of the two actions below:
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           branch: gh-pages
           folder: docs/_build/html 
+          commit-message: Update documentation from latest commit
 
       # - name: Deploy
       #   uses: peaceiris/actions-gh-pages@v3
       #   if: ${{ github.ref == 'refs/heads/main' }}
       #   with:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: docs/_build
+      #     publish_dir: docs/_build/html 
