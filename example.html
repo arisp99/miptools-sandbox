@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Search &mdash; miptools-sandbox  documentation</title>
+  <title>Dependencies &mdash; miptools-sandbox  documentation</title>
   
 
   
@@ -23,7 +23,6 @@
   
 
   
-    
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -37,10 +36,9 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-    <script type="text/javascript" src="_static/searchtools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to miptools-sandbox’s documentation!" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -67,7 +65,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -86,8 +84,8 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="example.html">Dependencies</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dependencies</a></li>
 </ul>
 
             
@@ -136,10 +134,14 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Search</li>
+      <li>Dependencies</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/example.md.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -151,23 +153,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search functionality.
-    </p>
-  </div>
-  </noscript>
+  <div class="tex2jax_ignore mathjax_ignore section" id="dependencies">
+<h1>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h1>
+<p>A working copy of Singularity is required: https://www.sylabs.io/docs/.
+Singularity is best installed with <strong>sudo</strong>. While it is said to be possible to
+install with unprivileged user with some features missing, MIPTools hasn’t been
+tested on such an installation.</p>
+<p>Singularity is available for most Linux systems including high-performance clusters. It is also possible to install
+and use on Mac OS using virtual machines with a little bit of extra work.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">snap</span></code> package is a rapid way to install the go language
+required by Singularity (e.g. on Ubuntu/Debian: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">snap</span> <span class="pre">install</span> <span class="pre">go</span> <span class="pre">--classic</span></code>). Install system dependencies</p>
+</div>
 
-  
-  <div id="search-results">
-  
-  </div>
 
            </div>
            
           </div>
           <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to miptools-sandbox’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
   <hr/>
 
@@ -204,14 +209,7 @@
   
   
     
-  
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
    
-
 
 </body>
 </html>
