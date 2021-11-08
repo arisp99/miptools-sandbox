@@ -10,7 +10,7 @@ Welcome to miptools-sandbox's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   example.md
 
 Indices and tables
 ==================
