@@ -6,12 +6,15 @@ From: amd64/ubuntu:20.04
 ##################################################################
 %labels
     Author Bailey Lab
-    Version v1.0.0.9000
+    Version v0.4.0.9000
 
 ##################################################################
 ##                         Post Section                         ##
 ##################################################################
 %post
+    # set number of cpus to use in build
+    CPU_COUNT=20
+
     # set build environment
     export DEBIAN_FRONTEND=noninteractive \
         CONDA_DIR=/opt/conda \
@@ -26,41 +29,41 @@ From: amd64/ubuntu:20.04
     apt-get update \
     && apt-get -yq dist-upgrade \
     && apt-get install -yq --no-install-recommends \
-    alien \
-    autoconf \
-    automake \
-    build-essential \
+    wget \
     bzip2 \
     ca-certificates \
-    cmake \
-    fonts-dejavu \
+    sudo \
+    locales \
     fonts-liberation \
-    gcc \
-    ghostscript \
+    fonts-dejavu \
     git \
-    less \
-    libbz2-dev \
-    libcurl4-gnutls-dev \
-    liblzma-dev \
-    libssl-dev \
+    build-essential \
+    gcc \
+    openssh-client \
+    nano \
     libtbb-dev \
+    libz-dev \
+    libxrender1 \
+    cmake \
+    automake \
+    autoconf \
+    rsync \
+    pigz \
+    perl-tk \
+    less \
+    software-properties-common \
     libxext6 \
     libxrender1 \
-    libxrender1 \
-    libz-dev \
-    locales \
-    nano \
+    ghostscript \
     openjdk-11-jdk \
-    openssh-client \
-    pandoc \
-    perl-tk \
-    pigz \
-    rsync \
-    software-properties-common \
-    sudo \
-    tree \
+    liblzma-dev \
+    libbz2-dev \
+    libssl-dev \
+    libcurl4-gnutls-dev \
+    alien \
     unzip \
-    wget
+    tree \
+    pandoc
 
     # set environment locale
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
@@ -69,6 +72,18 @@ From: amd64/ubuntu:20.04
     echo "LANGUAGE=en_US.UTF-8" >> /etc/environment
     locale-gen en_US.UTF-8
     update-locale LANG=en_US.UTF-8
+
+    # install bcl2fastq, if the file is there
+    cd /opt/programs
+    unzip bcl2fastq2*.zip || true
+    alien bcl2fastq2*.rpm || true
+    dpkg -i bcl2fastq2*.deb || true
+
+    # install msa2vcf
+    cd /opt/programs
+    git clone https://github.com/lindenb/jvarkit.git
+    cd jvarkit
+    ./gradlew msa2vcf
 
     # install conda
     cd /tmp && \
@@ -87,15 +102,89 @@ From: amd64/ubuntu:20.04
     # install mamba
     conda install mamba -c conda-forge
 
-    # install basespace cli
-    BS_PATH="https://launch.basespace.illumina.com/CLI/latest/amd64-linux/bs"
-    wget $BS_PATH -O /opt/bin/bs
+    # install conda packages using mamba
+    mamba install -qy\
+      "r" \
+      "r-epitools" \
+      "rpy2" \
+      "r-irkernel" \
+      "r-plotly" \
+      "r-knitr" \
+      "r-shiny" \
+      "r-ggplot2" \
+      "r-devtools" \
+      "r-dplyr" \
+      "r-dt" \
+      "r-pkgbuild" \
+      "gxx_linux-64" \
+      "python" \
+      "notebook" \
+      "nbconvert" \
+      "jupyter_contrib_nbextensions" \
+      "xlrd" \
+      "bcftools" \
+      "samtools" \
+      "vcftools" \
+      "htslib" \
+      "bwa" \
+      "bowtie2" \
+      "primer3" \
+      "primer3-py" \
+      "numpy" \
+      "scipy" \
+      "biopython" \
+      "pysam" \
+      "pandas" \
+      "matplotlib" \
+      "seaborn" \
+      "scikit-learn" \
+      "scandir" \
+      "openpyxl" \
+      "simplegeneric" \
+      "matplotlib-venn" \
+      "tblib" \
+      "parallel" \
+      "scikit-allel" \
+      "bioconductor-dnacopy" \
+      "basemap-data-hires" \
+      "seqtk=1.3" \
+      "gatk4" \
+      "freebayes" \
+      "lastz" \
+      "plotly" \
+      "texlive-core" \
+      "libgfortran4"
 
-    # install bcl2fastq, if the file is there
+    # install vt variant tool set
     cd /opt/programs
-    unzip bcl2fastq2*.zip || true
-    alien bcl2fastq2*.rpm || true
-    dpkg -i bcl2fastq2*.deb || true
+    git clone https://github.com/atks/vt.git
+    cd vt
+    git checkout 0.577
+    make -j $CPU_COUNT
+    scp vt /opt/bin
+
+    # install RealMcCoil
+    # Rscript -e 'devtools::install_github("OJWatson/McCOILR")'
+
+    # install rehh
+    Rscript -e 'install.packages("rehh", repos="https://cloud.r-project.org")'
+
+    # install MIPWrangler
+    cd /opt/programs
+    git clone https://github.com/bailey-lab/MIPWrangler
+    cd MIPWrangler
+    git checkout v1.2.0
+    ./install.sh $CPU_COUNT
+
+    # install elucidator
+    cd /opt/programs
+    git clone https://github.com/nickjhathaway/elucidator
+    cd elucidator
+    git checkout develop
+    ./install.sh $CPU_COUNT
+
+    # install parasight
+    scp /opt/programs/parasight_v7.6/parasight.pl /opt/bin/parasight76.pl
 
     # add executable flag to executables
     chmod -R +xr /usr/bin
@@ -137,9 +226,8 @@ From: amd64/ubuntu:20.04
 ##                         Jupyter App                         ##
 #################################################################
 %apprun jupyter
-    # Modify shell behavior
-    set -e
-    set -u
+    # Exit if something fails or if have unset object
+    set -eu
 
     # Port forwarding setup
     nb_port=$(shuf -i 8000-9999 -n 1)
@@ -147,16 +235,49 @@ From: amd64/ubuntu:20.04
     server_user=$(whoami)@$(hostname -f)
     nb_dir=/opt
 
+    help() {
+        echo "Open an interactive Jupyter Notebook. The notebook can be used"
+        echo "for post-wrangler mapping and variant calling." 
+        echo ""
+        echo "Usage:"
+        echo "  singularity run [options] --app jupyter <container>"\
+        "[app_options]"
+        echo ""
+        echo "Options:"
+        echo "  See 'singularity run'."
+        echo ""
+        echo "App Options:"
+        echo "  -d    The port to be used to load the Jupyter Notebook."
+        echo "  -h    Print the help page."
+        echo "  -p    The notebook directory."
+        echo ""
+        echo "Examples:"
+        echo "  # Set paths"
+        echo "  $ resource_dir=/bin/MIPTools/base_resources"
+        echo "  $ project_resources=/work/usr/DR1_project_resources"
+        echo "  $ species_resources=/work/usr/pf_species_resources"
+        echo "  $ wrangler_dir=/work/usr/wrangler"
+        echo "  $ variant_dir=/work/usr/variant"
+        echo ""
+        echo "  # Run app"
+        echo "  $ singularity run \\"
+        echo "    -B \${resource_dir}:/opt/resources \\"
+        echo "    -B \${project_resources}:/opt/project_resources \\"
+        echo "    -B \${species_resources}:/opt/species_resources \\"
+        echo "    -B \${wrangler_dir}:/opt/data \\"
+        echo "    -B \${variant_dir}:/opt/analysis \\"
+        echo "    --app jupyter <container>"
+    }
+
     # Parse options
-    while getopts p:d: OPT; do
-        case "$OPT" in
-            p)
-              nb_port="$OPTARG";;
-            d)
-              nb_dir="$OPTARG";;
-            *)
-              echo "Invalid option. Use -p to specify notebook port \
-                   -d to specify notebook directory."
+    while getopts "d:hp:" opt; do
+        case ${opt} in
+            d) nb_dir=${OPTARG} ;;
+            h) help
+               exit 1 ;;
+            p) nb_port=${OPTARG} ;;
+            *) help
+               exit 1 ;;
         esac
     done
 
@@ -164,12 +285,11 @@ From: amd64/ubuntu:20.04
     rsync /opt/resources/*.ipynb /opt/analysis --ignore-existing \
         --ignore-missing-args
 
-    # Inform the user how to acess the notebook    
-    port_fw="Use the following command if you are running this notebook from "
-    port_fw=$port_fw"a remote server. Ignore if using a local computer."
-    echo $port_fw
-    port_fw="ssh -N -f -L localhost:$nb_port:$server_ip:$nb_port $server_user"
-    echo $port_fw
+    # Inform the user how to access the notebook 
+    echo "Use the following command if you are running this notebook from a"
+    echo "remote server. Ignore if using a local computer."
+    echo "ssh -f -N -L localhost:${nb_port}:${server_ip}:${nb_port}"\
+    "${server_user}"
 
     # Setup juptyr notebook settings
     jupyter nbextension enable plotlywidget/extension
@@ -180,16 +300,53 @@ From: amd64/ubuntu:20.04
     jupyter nbextension enable spellchecker/main
 
     # Run notebook
-    jupyter notebook --notebook-dir=$nb_dir --ip=$server_ip \
-            --port=$nb_port --no-browser
+    jupyter notebook --notebook-dir=${nb_dir} --ip=${server_ip} \
+            --port=${nb_port} --no-browser
 
 ##################################################################
 ##                         Wrangler App                         ##
 ##################################################################
 %apprun wrangler
-    # Modify shell behavior
-    set -e
-    set -u
+    # Exit if something fails or if have unset object
+    set -eu
+
+    help() {
+        echo "Run quality control on demultiplexed data."
+        echo ""
+        echo "Usage:"
+        echo "  singularity run [options] --app wrangler <container>"\
+        "[app_options]"
+        echo ""
+        echo "Options:"
+        echo "  See 'singularity run'."
+        echo ""
+        echo "App Options:"
+        echo "  -c    Number of available processors to use. Default: 1."
+        echo "  -e    Required. A unique ID given to each sequencing run by"
+        echo "        the user."
+        echo "  -h    Print the help page."
+        echo "  -k    Keep intermediate files generated by MIPWrangler."
+        echo "  -l    Required. File providing a list of samples with "
+        echo "        associated information."
+        echo "  -m    Minimum capture length for stitching excluding probe"
+        echo "        arms."
+        echo "  -n    Starting number for MIP server. Default: 1."
+        echo "  -p    Required. Probe sets to be processed."
+        echo "  -s    Required. Sample sets to be processed."
+        echo "  -w    Absolute path to MIPWrangler run script. "
+        echo "        Default: '/opt/bin/runMIPWranglerCurrent.sh'."
+        echo "  -x    Required. Probe set to be processed."
+        echo ""
+        echo "Examples:"
+        echo "  $ singularity run --app wrangler <container> \\"
+        echo "    -e experiment_id -l sample_list.file -p probe_sets \\"
+        echo "    -s sample_sets -x stitch_options"
+        echo ""
+        echo "  $ singularity run --app wrangler <container> \\"
+        echo "    -c cpu_count -e experiment_id -l sample_list.file \\"
+        echo "    -m min_capture_length -p probe_sets -s sample_sets \\"
+        echo "    -x stitch_options -k"
+    }
     
     # Set defaults
     cluster_script="runMIPWranglerCurrent.sh"
@@ -200,44 +357,31 @@ From: amd64/ubuntu:20.04
     keep_files=""
 
     # Parse options
-    while getopts p:l:e:s:w:n:c:x:m:k OPT; do
-        case "$OPT" in
-            e)
-              experiment_id="$OPTARG";;
-            l)
-              sample_list="$OPTARG";;
-            p)
-              probe_sets="$OPTARG";;
-            s)
-              sample_sets="$OPTARG";;
-            w)
-              cluster_script="$OPTARG";;
-            n)
-              server_number="$OPTARG";;
-            c)
-              cpu_count="$OPTARG";;
-            x)
-              stitch_options="$OPTARG";;
-            k)
-              keep_files="-k";;
-
-            m)
-              min_capture_length="$OPTARG";;
-
-            *)
-              echo "Invalid option. Use 'wrangler \
-              -e experiment_id -l sample_list.file -p  probe_sets\
-              -s sample_sets -w cluster_script -n server_number \
-              -c  cpu_count -x stitch_options'  \
-              -m min_capture_length [-k]"
+    while getopts "c:e:hkl:m:n:p:s:w:x:" opt; do
+        case ${opt} in
+            c) cpu_count=${OPTARG} ;;
+            e) experiment_id=${OPTARG} ;;
+            h) help
+               exit 1 ;;
+            k) keep_files=-k ;;
+            l) sample_list=${OPTARG} ;;
+            m) min_capture_length=${OPTARG} ;;
+            n) server_number=${OPTARG} ;;
+            p) probe_sets=${OPTARG} ;;
+            s) sample_sets=${OPTARG} ;;
+            w) cluster_script=${OPTARG} ;;
+            x) stitch_options=${OPTARG} ;;
+            *) help
+               exit 1 ;;
         esac
     done
 
     # Create wrangler bash scripts using python
     python /opt/src/generate_wrangler_scripts.py \
-    -e $experiment_id -l /opt/analysis/$sample_list \
-    -p $probe_sets -s $sample_sets -w $cluster_script -n $server_number \
-    -c $cpu_count -x $stitch_options -m $min_capture_length $keep_files
+    -c ${cpu_count} -e ${experiment_id} ${keep_files} \
+    -l /opt/analysis/${sample_list} -m ${min_capture_length} \
+    -n ${server_number} -p ${probe_sets} -s ${sample_sets} \
+    -w ${cluster_script} -x ${stitch_options}
 
     # Run wrangler scripts.
     # The dot space is used to let the sourced script modify the current
@@ -245,77 +389,69 @@ From: amd64/ubuntu:20.04
     . /opt/analysis/wrangle.sh
 
 ##################################################################
-##                    Basespace Download App                    ##
+##                         Download App                         ##
 ##################################################################
-%apprun bs_download
-    # Exit if something fails
-    set -e
-
-    # Set default values for paths
-    output_path="/opt/analysis"
-    config_path="/opt/resources/basespace.cfg"
+%apprun download
+    # Exit if something fails or if have unset object
+    set -eu
 
     help() {
         echo "Download data from the Illumina BaseSpace Sequence Hub."
         echo ""
         echo "Usage:"
-        echo "  singularity run [options] --app bs_download <container>"\
+        echo "  singularity run [options] --app download <container>"\
         "[app_options]"
         echo ""
         echo "Options:"
         echo "  See 'singularity run'."
         echo ""
         echo "App Options:"
-        echo "  -i    Required. The run ID of the data to download."
-        echo "  -o    The path to the output directory."
-        echo "        Default: '/opt/analysis'."
-        echo "  -c    The path to the authentication credentials file."
-        echo "        This file is created by 'bs auth'. For additional"
-        echo "        information see the help page for that command."
-        echo "        Default: '/opt/resources/basespace.cfg'."
         echo "  -h    Print the help page."
+        echo "  -r    Required. The run ID of the data to download."
+        echo ""
+        echo "Additional Details:"
+        echo "  An 'access_token.txt' file with a valid access token is"
+        echo "  required. It must be present in the 'base_resources' directory."
+        echo "  A data directory where the data will be downloaded to must be"
+        echo "  mounted to '/opt/data'."
         echo ""
         echo "Examples:"
         echo "  # Set paths"
         echo "  $ resource_dir=/bin/MIPTools/base_resources"
-        echo "  $ run_dir=/work/usr/example"
+        echo "  $ output_dir=/work/usr/downloaded"
         echo ""
         echo "  # Run app"
         echo "  $ singularity run \\"
-        echo "    -B \$resource_dir:/opt/resources"\
-        "-B \$run_dir:/opt/analysis \\"
-        echo "    --app bs_download <container> -i <run_id>"
+        echo "    -B \${resource_dir}:/opt/resources"\
+        "-B \${output_dir}:/opt/analysis \\"
+        echo "    --app download <container> -r <run_id>"
     }
-    
-    # Argument handling using getopts
-    # Could alternatively use manual processing. This would allow for long
-    # form inputs.
-    while getopts "i:o:c:h" opt; do
-      case "${opt}" in
-        i) run_id=${OPTARG} ;;
-        o) ouput_path=${OPTARG} ;;
-        c) config_path=${OPTARG} ;;
-        h) help
-           exit 1 ;;
-        *) help
-           exit 1 ;;
-      esac
+
+    while getopts "hr:" opt; do
+        case ${opt} in
+            h) help
+               exit 1 ;;
+            r) run_id=${OPTARG} ;;
+            *) help
+               exit 1 ;;
+        esac
     done
+
+    # Print to CLI
+    echo "Downloading NextSeq run ${run_id} from BaseSpace."
+    echo "Depending on the data size, this can take very long (up to 10 h)."
+    echo "It is recommended to run this app in a screen (GNU screen)."
+    echo "A message indicating the end of download will be printed when done."
+    echo "Check nohup.out file in your output directory for the download log."
     
-    # Ensure run_id is specified
-    if [ ! $run_id ]; then
-      echo "Argument -i must be provided"
-      echo "$usage" >&2
-      exit 1
-    fi
+    # cd and run app
+    # Use nohup to make command keep running even if get hangup signal
+    cd /opt/analysis
+    nohup python /opt/bin/BaseSpaceRunDownloader_v2.py \
+     -r ${run_id} -a "$(cat /opt/resources/access_token.txt)"
 
-    # Read data from config file
-    # Remove whitespace from each line and export each line as a variable
-    export BASESPACE_API_SERVER=$(sed "1q;d" ${config_path} | sed "s/.*=.//g")
-    export BASESPACE_ACCESS_TOKEN=$(sed "2q;d" ${config_path} | sed "s/.*=.//g")
-
-    # Download data
-    bs download run -i ${run_id} -o ${output_path}
+    # Print to CLI 
+    echo "Download finished."
 
 #################################################################
 ##                          Demux App                          ##
@@ -324,18 +460,46 @@ From: amd64/ubuntu:20.04
     # Exit if something fails or if have unset object
     set -eu
 
-    while getopts "s:p:"" opt; do
+    help() {
+        echo "Demultiplex data. Generates per-sample fastq files from the raw" 
+        echo "sequence data consisting of bcl files."
+        echo ""
+        echo "Usage:"
+        echo "  singularity run [options] --app demux <container> [app_options]"
+        echo ""
+        echo "Options:"
+        echo "  See 'singularity run'."
+        echo ""
+        echo "App Options:"
+        echo "  -h    Print the help page."
+        echo "  -p    Required. The sequencing platform used. Either 'miseq'"
+        echo "        or 'nextseq'."
+        echo "  -s    Required. The list of samples. Contains the samples used"
+        echo "        in the study, the primers used, etc. This file must be "
+        echo "        present in the directory mounted to '/opt/analysis'."
+        echo ""
+        echo "Examples:"
+        echo "  # Set paths"
+        echo "  $ resource_dir=/bin/MIPTools/base_resources"
+        echo "  $ bcl_dir=/work/usr/downloaded"
+        echo "  $ fastq_dir=/work/usr/fastq"
+        echo ""
+        echo "  # Run app"
+        echo "  $ singularity run \\"
+        echo "    -B \${resource_dir}:/opt/resources \\"
+        echo "    -B \${bcl_dir}:/opt/data \\"
+        echo "    -B \${fastq_dir}:/opt/analysis \\"
+        echo "    --app demux <container> -s sample_list.tsv -p nextseq"
+    }
+
+    while getopts "hp:s:" opt; do
         case ${opt} in
-            s)  sample_list=${OPTARG} ;;
-            p)  platform=${OPTARG} ;;
-            ?)  echo "Usage: singularity run --app demux \\"
-                echo "           -B /path_to_output_dir:/opt/analysis \\"
-                echo "           -B /path_to_base_resources:/opt/resources \\"
-                echo "            mycontainer.sif -s sample_list_file \\"
-                echo "            -p sequencing_platform (nextseq or miseq) \\"
-                echo "The sample list file must be present in the output"
-                echo "directory mounted to /opt/analysis."
-                exit 1 ;;
+            h) help
+               exit 1 ;;
+            p) platform=${OPTARG} ;;
+            s) sample_list=${OPTARG} ;;
+            *) help
+               exit 1 ;;
         esac
     done
 
@@ -343,18 +507,22 @@ From: amd64/ubuntu:20.04
     cd /opt/src
     template_dir="/opt/resources/templates/sample_sheet_templates/"
     platform_template="${platform}"_sample_sheet_template.csv
-    template="${template_dir}${platform}_template"
+    template="${template_dir}${platform_template}"
     bc_dict="/opt/resources/barcode_dict.json"
     output_dir="/opt/analysis"
     sample_list="/opt/analysis/${sample_list}"
     
     # Create a sample sheet for demultiplexing
     python -c 'import mip_functions as mip; mip.generate_sample_sheet(
-        "'"$sample_list"'", "'"$bc_dict"'", "'"$template"'", "'"$platform"'",
-        "'"$output_dir"'")'
+        "'"${sample_list}"'", 
+        "'"${bc_dict}"'", 
+        "'"${template}"'", 
+        "'"${platform}"'", 
+        "'"${output_dir}"'"
+    )'
 
-    # cd to where bcl files are.
-    cd /opt/analysis
+    # cd to where bcl files are
+    cd /opt/data
     
     # Create a fastq directory for saving fastqs
     mkdir -p /opt/analysis/fastq
@@ -375,19 +543,46 @@ From: amd64/ubuntu:20.04
 ##                         Demux QC App                         ##
 ##################################################################
 %apprun demux_qc
-    # Parse options
-    set -e
-    set -u
-    while getopts p: opt; do
-        case $opt in
-            p)  platform=$OPTARG;;
-            ?)  echo "Usage: singularity run --app demux_qc\\"
-                echo "           -B /path_to_base_resources:/opt/resources \\"
-                echo "           -B /path_to_fastq_dir:/opt/analysis "
-                echo "            mycontainer.sif -p sequencing_platform"
-                exit 1;;
+    # Exit if something fails or if have unset object
+    set -eu
+
+    help() {
+        echo "Run quality control on demultiplexed data."
+        echo ""
+        echo "Usage:"
+        echo "  singularity run [options] --app demux_qc <container>"\
+        "[app_options]"
+        echo ""
+        echo "Options:"
+        echo "  See 'singularity run'."
+        echo ""
+        echo "App Options:"
+        echo "  -h    Print the help page."
+        echo "  -p    Required. The sequencing platform used. Either 'miseq'"
+        echo "        or 'nextseq'."
+        echo ""
+        echo "Examples:"
+        echo "  # Set paths"
+        echo "  $ resource_dir=/bin/MIPTools/base_resources"
+        echo "  $ fastq_dir=/work/usr/example"
+        echo ""
+        echo "  # Run app"
+        echo "  $ singularity run \\"
+        echo "    -B \${resource_dir}:/opt/resources"\
+        "-B \${fastq_dir}:/opt/analysis \\"
+        echo "    --app demux_qc <container> -p nextseq"
+    }
+
+    # Argument handling
+    while getopts "hp:" opt; do
+        case ${opt} in
+            h) help
+               exit 1 ;;
+            p) platform=${OPTARG} ;;
+            *) help
+               exit 1 ;;
         esac
     done
 
-    # Run app
-    python /opt/src/demux_qc.py -p $platform
+    # Run python script
+    python /opt/src/demux_qc.py -p ${platform}
