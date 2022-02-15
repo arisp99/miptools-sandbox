@@ -116,6 +116,7 @@ From: amd64/ubuntu:20.04
       "r-dplyr" \
       "r-dt" \
       "r-pkgbuild" \
+      "r-magrittr" \
       "gxx_linux-64" \
       "python" \
       "notebook" \
