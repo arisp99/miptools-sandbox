@@ -95,7 +95,7 @@ From: amd64/ubuntu:20.04
 
     # install conda packages using mamba
     mamba install -qy\
-      "r=3.6.3" \
+      "r-base=3.6.3" \
       "r-epitools=0.5_10" \
       "rpy2=3.4.4" \
       "r-irkernel=1.2" \
@@ -111,7 +111,7 @@ From: amd64/ubuntu:20.04
       "python=3.8.3" \
       "notebook=6.4.0" \
       "nbconvert=6.0.7" \
-      "jupyter_contrib_nbextensions=0.4.1" \
+      "jupyter_contrib_nbextensions=0.5.1" \
       "xlrd=2.0.1" \
       "bcftools=1.12" \
       "samtools=1.12" \
@@ -140,7 +140,7 @@ From: amd64/ubuntu:20.04
       "basemap-data-hires=1.2.2" \
       "seqtk=1.3" \
       "gatk4=4.2.0.0" \
-      "freebayes=1.3.6" \
+      "freebayes=1.3.5" \
       "lastz=1.0.4" \
       "plotly=4.14.3" \
       "texlive-core=20180414" \
