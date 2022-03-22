@@ -17,13 +17,10 @@ From: amd64/ubuntu:20.04
 
     # set build environment
     export DEBIAN_FRONTEND=noninteractive \
-        CONDA_DIR=/opt/conda \
         SHELL=/bin/bash \
         LANG=en_US.UTF-8 \
         LANGUAGE=en_US.UTF-8 \
-        LC_ALL=en_US.UTF-8 \
-        MINICONDA_VERSION=4.8.3
-    export PATH=$CONDA_DIR/bin:$PATH
+        LC_ALL=en_US.UTF-8
 
     # install system packages
     apt-get update \
@@ -74,120 +71,135 @@ From: amd64/ubuntu:20.04
     update-locale LANG=en_US.UTF-8
 
     # install bcl2fastq, if the file is there
-    # cd /opt/programs
-    # unzip bcl2fastq2*.zip || true
-    # alien bcl2fastq2*.rpm || true
-    # dpkg -i bcl2fastq2*.deb || true
+    cd /opt/programs
+    unzip bcl2fastq2*.zip || true
+    alien bcl2fastq2*.rpm || true
+    dpkg -i bcl2fastq2*.deb || true
 
     # install msa2vcf
-    # cd /opt/programs
-    # git clone https://github.com/lindenb/jvarkit.git
-    # cd jvarkit
-    # ./gradlew msa2vcf
+    cd /opt/programs
+    git clone --branch 2021.10.13 https://github.com/lindenb/jvarkit.git
+    cd jvarkit
+    ./gradlew msa2vcf
 
-    # install conda
+    # install conda and python via Miniconda3
+    PYTHON_VERSION=3.8
+    MINICONDA_VERSION=4.8.3
+    MINICONDA_MD5=d63adf39f2c220950a063e0529d4ff74
+    CONDA_DIR=/opt/conda
+    export PATH=${CONDA_DIR}/bin:${PATH}
     cd /tmp && \
-        wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py38_${MINICONDA_VERSION}-Linux-x86_64.sh && \
-        echo "d63adf39f2c220950a063e0529d4ff74 *Miniconda3-py38_${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
-        /bin/bash Miniconda3-py38_${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
-        rm Miniconda3-py38_${MINICONDA_VERSION}-Linux-x86_64.sh && \
-        $CONDA_DIR/bin/conda config --add channels defaults && \
-        $CONDA_DIR/bin/conda config --add channels bioconda && \
-        $CONDA_DIR/bin/conda config --add channels conda-forge && \
-        $CONDA_DIR/bin/conda config --add channels r && \
-        $CONDA_DIR/bin/conda config --system --set show_channel_urls true && \
-        $CONDA_DIR/bin/conda install --quiet --yes conda="${MINICONDA_VERSION%.*}.*" && \
+        wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-py${PYTHON_VERSION//./}_${MINICONDA_VERSION}-Linux-x86_64.sh" && \
+        echo "${MINICONDA_MD5} *Miniconda3-py${PYTHON_VERSION//./}_${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
+        /bin/bash Miniconda3-py${PYTHON_VERSION//./}_${MINICONDA_VERSION}-Linux-x86_64.sh -bfp ${CONDA_DIR} && \
+        rm Miniconda3-py${PYTHON_VERSION//./}_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+        ${CONDA_DIR}/bin/conda config --add channels defaults && \
+        ${CONDA_DIR}/bin/conda config --add channels bioconda && \
+        ${CONDA_DIR}/bin/conda config --add channels conda-forge && \
+        ${CONDA_DIR}/bin/conda config --add channels r && \
+        ${CONDA_DIR}/bin/conda config --system --set show_channel_urls true && \
+        ${CONDA_DIR}/bin/conda install --quiet --yes conda="${MINICONDA_VERSION%.*}.*" && \
         conda clean --all -f -y
 
     # install mamba
-    conda install mamba -c conda-forge
+    conda install mamba=0.13.0 -c conda-forge
 
     # install conda packages using mamba
     mamba install -qy\
-      "r" \
-      "r-epitools" \
-      "rpy2" \
-      "r-irkernel" \
-      "r-plotly" \
-      "r-knitr" \
-      "r-shiny" \
-      "r-ggplot2" \
-      "r-devtools" \
-      "r-dplyr" \
-      "r-dt" \
-      "r-pkgbuild" \
-      "gxx_linux-64" \
-      "python" \
-      "notebook" \
-      "nbconvert" \
-      "jupyter_contrib_nbextensions" \
-      "xlrd" \
-      "bcftools" \
-      "samtools" \
-      "vcftools" \
-      "htslib" \
-      "bwa" \
-      "bowtie2" \
-      "primer3" \
-      "primer3-py" \
-      "numpy" \
-      "scipy" \
-      "biopython" \
-      "pysam" \
-      "pandas" \
-      "matplotlib" \
-      "seaborn" \
-      "scikit-learn" \
-      "scandir" \
-      "openpyxl" \
-      "simplegeneric" \
-      "matplotlib-venn" \
-      "tblib" \
-      "parallel" \
-      "scikit-allel" \
-      "bioconductor-dnacopy" \
-      "basemap-data-hires" \
+      "r=3.6.3" \
+      "r-epitools=0.5_10" \
+      "rpy2=3.4.4" \
+      "r-irkernel=1.2" \
+      "r-plotly=4.9.3" \
+      "r-knitr=1.33" \
+      "r-shiny=1.6.0" \
+      "r-ggplot2=3.3.3" \
+      "r-devtools=2.4.1" \
+      "r-dplyr=1.0.6" \
+      "r-dt=0.18" \
+      "r-pkgbuild=1.2.0" \
+      "gxx_linux-64=7.5.0" \
+      "python=3.8.3" \
+      "notebook=6.4.0" \
+      "nbconvert=6.0.7" \
+      "jupyter_contrib_nbextensions=0.4.1" \
+      "xlrd=2.0.1" \
+      "bcftools=1.12" \
+      "samtools=1.12" \
+      "vcftools=0.1.16" \
+      "htslib=1.12" \
+      "bwa=0.7.17" \
+      "bowtie2=2.4.3" \
+      "primer3=2.5.0" \
+      "primer3-py=0.6.0" \
+      "numpy=1.20.3" \
+      "scipy=1.6.2" \
+      "biopython=1.78" \
+      "pysam=0.16.0.1" \
+      "pandas=1.2.4" \
+      "matplotlib=3.4.2" \
+      "seaborn=0.11.1" \
+      "scikit-learn=0.24.2" \
+      "scandir=1.10.0" \
+      "openpyxl=3.0.7" \
+      "simplegeneric=0.8.1" \
+      "matplotlib-venn=0.11.6" \
+      "tblib=1.7.0" \
+      "parallel=20210422" \
+      "scikit-allel=1.3.5" \
+      "bioconductor-dnacopy=1.60.0" \
+      "basemap-data-hires=1.2.2" \
       "seqtk=1.3" \
-      "gatk4" \
-      "freebayes" \
-      "lastz" \
-      "plotly" \
-      "texlive-core" \
-      "libgfortran4"
+      "gatk4=4.2.0.0" \
+      "freebayes=1.3.6" \
+      "lastz=1.0.4" \
+      "plotly=4.14.3" \
+      "texlive-core=20180414" \
+      "libgfortran4=7.5.0"
 
     # install vt variant tool set
-    # cd /opt/programs
-    # git clone https://github.com/atks/vt.git
-    # cd vt
-    # git checkout 0.577
-    # make -j $CPU_COUNT
-    # scp vt /opt/bin
+    cd /opt/programs
+    git clone --branch 0.577 https://github.com/atks/vt.git
+    cd vt
+    make -j $CPU_COUNT
+    scp vt /opt/bin
 
     # install magrittr
-    Rscript -e 'install.packages("magrittr", repos="https://cloud.r-project.org")'
+    Rscript -e 'devtools::install_version(
+        package = "magrittr",
+        version = "2.0.2",
+        repos = "https://cloud.r-project.org"
+    )'
 
     # install RealMcCoil
-    Rscript -e 'devtools::install_github("OJWatson/McCOILR")'
+    Rscript -e 'devtools::install_github("OJWatson/McCOILR", ref = "v1.3.1")'
 
     # install rehh
-    # Rscript -e 'install.packages("rehh", repos="https://cloud.r-project.org")'
+    Rscript -e 'devtools::install_version(
+        package = "rehh", 
+        version = "3.2.2",
+        repos = "https://cloud.r-project.org"
+    )'
 
     # install MIPWrangler
-    # cd /opt/programs
-    # git clone https://github.com/bailey-lab/MIPWrangler
-    # cd MIPWrangler
-    # git checkout v1.2.0
-    # # ./install.sh $CPU_COUNT
+    cd /opt/programs
+    git clone --branch v1.2.0 https://github.com/bailey-lab/MIPWrangler
+    cd MIPWrangler
+    ./install.sh $CPU_COUNT
 
     # install elucidator
-    # cd /opt/programs
-    # git clone https://github.com/nickjhathaway/elucidator
-    # cd elucidator
-    # git checkout develop
-    # ./install.sh $CPU_COUNT
+    cd /opt/programs
+    git clone --branch develop https://github.com/nickjhathaway/elucidator
+    cd elucidator
+    ./install.sh $CPU_COUNT
 
     # install parasight
-    # scp /opt/programs/parasight_v7.6/parasight.pl /opt/bin/parasight76.pl
+    scp /opt/programs/parasight_v7.6/parasight.pl /opt/bin/parasight76.pl
+
+    # install basespace cli
+    BS_VERSION=1.5.1
+    BS_PATH="https://launch.basespace.illumina.com/CLI/${BS_VERSION}/amd64-linux/bs"
+    wget $BS_PATH -O /opt/bin/bs
 
     # add executable flag to executables
     chmod -R +xr /usr/bin
@@ -240,7 +252,7 @@ From: amd64/ubuntu:20.04
 
     help() {
         echo "Open an interactive Jupyter Notebook. The notebook can be used"
-        echo "for post-wrangler mapping and variant calling." 
+        echo "for post-wrangler mapping and variant calling."
         echo ""
         echo "Usage:"
         echo "  singularity run [options] --app jupyter <container>"\
@@ -288,7 +300,7 @@ From: amd64/ubuntu:20.04
     rsync /opt/resources/*.ipynb /opt/analysis --ignore-existing \
         --ignore-missing-args
 
-    # Inform the user how to access the notebook 
+    # Inform the user how to access the notebook
     echo "Use the following command if you are running this notebook from a"
     echo "remote server. Ignore if using a local computer."
     echo "ssh -f -N -L localhost:${nb_port}:${server_ip}:${nb_port}"\
@@ -314,7 +326,7 @@ From: amd64/ubuntu:20.04
     set -eu
 
     help() {
-        echo "Run quality control on demultiplexed data."
+        echo "Run MIPWrangler on demultiplexed data."
         echo ""
         echo "Usage:"
         echo "  singularity run [options] --app wrangler <container>"\
@@ -338,19 +350,35 @@ From: amd64/ubuntu:20.04
         echo "  -s    Required. Sample sets to be processed."
         echo "  -w    Absolute path to MIPWrangler run script. "
         echo "        Default: '/opt/bin/runMIPWranglerCurrent.sh'."
-        echo "  -x    Required. Probe set to be processed."
+        echo "  -x    Required. Additional arguments to pass to MIPWrangler"
+        echo "        mipSetupAndExtractByArm. This command extracts sequences"
+        echo "        and stitches paired end reads to single sequences."
         echo ""
         echo "Examples:"
-        echo "  $ singularity run --app wrangler <container> \\"
-        echo "    -e experiment_id -l sample_list.file -p probe_sets \\"
-        echo "    -s sample_sets -x stitch_options"
+        echo "  # Define variables"
+        echo "  $ probe_sets='DR1,VAR4'"
+        echo "  $ sample_sets='JJJ'"
+        echo "  $ stitch_options='--stitchGapExtend=1,--overWriteDirs'"
         echo ""
-        echo "  $ singularity run --app wrangler <container> \\"
-        echo "    -c cpu_count -e experiment_id -l sample_list.file \\"
-        echo "    -m min_capture_length -p probe_sets -s sample_sets \\"
-        echo "    -x stitch_options -k"
+        echo "  $ singularity run "
+        echo "    -B project_resources:/opt/project_resources \\"
+        echo "    -B fastq_dir:/opt/data \\"
+        echo "    -B wrangler_dir:/opt/analysis \\"
+        echo "    --app wrangler <container> \\"
+        echo "    -e <experiment_id> -l <sample_list.file> -p \${probe_sets} \\"
+        echo "    -s \${sample_sets} -x \${stitch_options}"
+        echo ""
+        echo "  # Run app"
+        echo "  $ singularity run "
+        echo "    -B project_resources:/opt/project_resources \\"
+        echo "    -B fastq_dir:/opt/data \\"
+        echo "    -B wrangler_dir:/opt/analysis \\"
+        echo "    --app wrangler <container> \\"
+        echo "    -c <cpu_count> -e <experiment_id> -l <sample_list.file> \\"
+        echo "    -m <min_capture_length> -p \${probe_sets} -s \\"
+        echo "    \${sample_sets} -x \${stitch_options} -k"
     }
-    
+
     # Set defaults
     cluster_script="runMIPWranglerCurrent.sh"
     server_number=1
@@ -379,6 +407,19 @@ From: amd64/ubuntu:20.04
         esac
     done
 
+    # Remove whitespace from arguments
+    probe_sets=${probe_sets//[[:space:]]/}
+    sample_sets=${sample_sets//[[:space:]]/}
+    stitch_options=${stitch_options//[[:space:]]/}
+    
+    # Ensure that stitch options begin with a comma if not the default value
+    # This is done as the arguments are fed in with leading dashes and the
+    # python script will crash if dashes are fed in. By adding a leading comma,
+    # the script will run.
+    if [ ${stitch_options:0:1} != "," ] && [ ${stitch_options} != "none" ]; then
+        stitch_options=",${stitch_options}"
+    fi
+
     # Create wrangler bash scripts using python
     python /opt/src/generate_wrangler_scripts.py \
     -c ${cpu_count} -e ${experiment_id} ${keep_files} \
@@ -392,11 +433,15 @@ From: amd64/ubuntu:20.04
     . /opt/analysis/wrangle.sh
 
 ##################################################################
-##                         Download App                         ##
+##                    Basespace Download App                    ##
 ##################################################################
 %apprun download
-    # Exit if something fails or if have unset object
+    # Exit if something fails
     set -eu
+
+    # Set default values for paths
+    output_path="/opt/analysis"
+    config_path="/opt/resources/basespace.cfg"
 
     help() {
         echo "Download data from the Illumina BaseSpace Sequence Hub."
@@ -409,6 +454,78 @@ From: amd64/ubuntu:20.04
         echo "  See 'singularity run'."
         echo ""
         echo "App Options:"
+        echo "  -i    Required. The run ID of the data to download."
+        echo "  -o    The path to the output directory."
+        echo "        Default: '/opt/analysis'."
+        echo "  -c    The path to the authentication credentials file."
+        echo "        This file is created by 'bs auth'. For additional"
+        echo "        information see the help page for that command."
+        echo "        Default: '/opt/resources/basespace.cfg'."
+        echo "  -h    Print the help page."
+        echo ""
+        echo "Examples:"
+        echo "  # Set paths"
+        echo "  $ resource_dir=/bin/MIPTools/base_resources"
+        echo "  $ run_dir=/work/usr/example"
+        echo ""
+        echo "  # Run app"
+        echo "  $ singularity run \\"
+        echo "    -B \${resource_dir}:/opt/resources \\"
+        echo "    -B \${run_dir}:/opt/analysis \\"
+        echo "    --app download <container> -i <run_id>"
+    }
+    
+    # Parse options
+    while getopts "i:o:c:h" opt; do
+      case "${opt}" in
+        c) config_path=${OPTARG} ;;
+        h) help
+           exit 1 ;;
+        i) run_id=${OPTARG} ;;
+        o) output_path=${OPTARG} ;;
+        *) help
+           exit 1 ;;
+      esac
+    done
+    
+    # Ensure run_id is specified
+    if [ -z ${run_id} ]; then
+      echo "Argument -i must be provided"
+      help >&2
+      exit 1
+    fi
+
+    # Read data from config file
+    # Remove whitespace from each line and export each line as a variable
+    export BASESPACE_API_SERVER=$(sed "1q;d" ${config_path} | sed "s/.*=.//g")
+    export BASESPACE_ACCESS_TOKEN=$(sed "2q;d" ${config_path} | sed "s/.*=.//g")
+
+    # Download data
+    bs download run --summary -i ${run_id} -o ${output_path}/${run_id}
+
+#################################################################
+##                   Superseded Download App                   ##
+#################################################################
+%apprun download_superseded
+    # Exit if something fails or if have unset object
+    set -eu
+
+    help() {
+        echo "Download data from the Illumina BaseSpace Sequence Hub."
+        echo ""
+        echo "Superseded Note:"
+        echo "  Please note that this app has been superseded by the download" 
+        echo "  app, which uses the basespace command line interface for" 
+        echo "  downloading data."
+        echo ""
+        echo "Usage:"
+        echo "  singularity run [options] --app download_superseded \\"
+        echo "    <container> [app_options]"
+        echo ""
+        echo "Options:"
+        echo "  See 'singularity run'."
+        echo ""
+        echo "App Options:"
         echo "  -h    Print the help page."
         echo "  -r    Required. The run ID of the data to download."
         echo ""
@@ -416,7 +533,7 @@ From: amd64/ubuntu:20.04
         echo "  An 'access_token.txt' file with a valid access token is"
         echo "  required. It must be present in the 'base_resources' directory."
         echo "  A data directory where the data will be downloaded to must be"
-        echo "  mounted to '/opt/data'."
+        echo "  mounted to '/opt/analysis'."
         echo ""
         echo "Examples:"
         echo "  # Set paths"
@@ -427,7 +544,7 @@ From: amd64/ubuntu:20.04
         echo "  $ singularity run \\"
         echo "    -B \${resource_dir}:/opt/resources"\
         "-B \${output_dir}:/opt/analysis \\"
-        echo "    --app download <container> -r <run_id>"
+        echo "    --app download_superseded <container> -r <run_id>"
     }
 
     while getopts "hr:" opt; do
@@ -446,14 +563,14 @@ From: amd64/ubuntu:20.04
     echo "It is recommended to run this app in a screen (GNU screen)."
     echo "A message indicating the end of download will be printed when done."
     echo "Check nohup.out file in your output directory for the download log."
-    
+
     # cd and run app
     # Use nohup to make command keep running even if get hangup signal
     cd /opt/analysis
     nohup python /opt/bin/BaseSpaceRunDownloader_v2.py \
      -r ${run_id} -a "$(cat /opt/resources/access_token.txt)"
 
-    # Print to CLI 
+    # Print to CLI
     echo "Download finished."
 
 #################################################################
@@ -464,7 +581,7 @@ From: amd64/ubuntu:20.04
     set -eu
 
     help() {
-        echo "Demultiplex data. Generates per-sample fastq files from the raw" 
+        echo "Demultiplex data. Generates per-sample fastq files from the raw"
         echo "sequence data consisting of bcl files."
         echo ""
         echo "Usage:"
@@ -475,31 +592,28 @@ From: amd64/ubuntu:20.04
         echo ""
         echo "App Options:"
         echo "  -h    Print the help page."
-        echo "  -p    Required. The sequencing platform used. Either 'miseq'"
-        echo "        or 'nextseq'."
-        echo "  -s    Required. The list of samples. Contains the samples used"
-        echo "        in the study, the primers used, etc. This file must be "
-        echo "        present in the directory mounted to '/opt/analysis'."
+        echo "  -s    Required. Sample sheet for demultiplexing. "
+        echo "        This file must be present in the directory mounted to "
+        echo "        '/opt/analysis'."
         echo ""
         echo "Examples:"
         echo "  # Set paths"
         echo "  $ resource_dir=/bin/MIPTools/base_resources"
         echo "  $ bcl_dir=/work/usr/downloaded"
-        echo "  $ fastq_dir=/work/usr/fastq"
+        echo "  $ fastq_root_dir=/work/usr/"
         echo ""
         echo "  # Run app"
         echo "  $ singularity run \\"
         echo "    -B \${resource_dir}:/opt/resources \\"
         echo "    -B \${bcl_dir}:/opt/data \\"
-        echo "    -B \${fastq_dir}:/opt/analysis \\"
-        echo "    --app demux <container> -s sample_list.tsv -p nextseq"
+        echo "    -B \${fastq_root_dir}:/opt/analysis \\"
+        echo "    --app demux <container> -s SampleSheet.csv"
     }
 
-    while getopts "hp:s:" opt; do
+    while getopts "hs:" opt; do
         case ${opt} in
             h) help
                exit 1 ;;
-            p) platform=${OPTARG} ;;
             s) sample_list=${OPTARG} ;;
             *) help
                exit 1 ;;
@@ -507,39 +621,20 @@ From: amd64/ubuntu:20.04
     done
 
     # Define variables
-    cd /opt/src
-    template_dir="/opt/resources/templates/sample_sheet_templates/"
-    platform_template="${platform}"_sample_sheet_template.csv
-    template="${template_dir}${platform_template}"
-    bc_dict="/opt/resources/barcode_dict.json"
-    output_dir="/opt/analysis"
-    sample_list="/opt/analysis/${sample_list}"
-    
-    # Create a sample sheet for demultiplexing
-    python -c 'import mip_functions as mip; mip.generate_sample_sheet(
-        "'"${sample_list}"'", 
-        "'"${bc_dict}"'", 
-        "'"${template}"'", 
-        "'"${platform}"'", 
-        "'"${output_dir}"'"
-    )'
-
+    sample_sheet="/opt/analysis/${sample_list}"
     # cd to where bcl files are
     cd /opt/data
-    
+
     # Create a fastq directory for saving fastqs
     mkdir -p /opt/analysis/fastq
-    
-    # Copy sample list to fastq directory
-    scp ${sample_list} /opt/analysis/fastq/
-    
+
     # Increase limit of open number of files.
     ulimit -Sn $(ulimit -Hn)
-    
+
     # Run bcl2fastq
     # Use nohup to make command keep running even if get hangup signal
     nohup bcl2fastq -o /opt/analysis/fastq \
-        --sample-sheet /opt/analysis/SampleSheet.csv \
+        --sample-sheet ${sample_sheet} \
         --no-lane-splitting
 
 ##################################################################
@@ -573,7 +668,7 @@ From: amd64/ubuntu:20.04
         echo "  $ singularity run \\"
         echo "    -B \${resource_dir}:/opt/resources"\
         "-B \${fastq_dir}:/opt/analysis \\"
-        echo "    --app demux_qc <container> -p nextseq"
+        echo "    --app demux_qc <container> -p 'nextseq'"
     }
 
     # Argument handling
