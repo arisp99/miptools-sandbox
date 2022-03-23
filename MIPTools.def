@@ -89,15 +89,17 @@ From: amd64/ubuntu:20.04
     # Note that the mamba installation will update conda to the latest version
     conda install mamba=0.13.0 --channel conda-forge
 
-    # Install packages using an environment file. 
-    # If the versioned file exists, use it as a template to ensure version 
+    # Install mamba packages using an environment file.
+    # If the versioned file exists, use it as a template to ensure version
     # numbers are fixed. Otherwise, install packages with the latest versions.
+    # Note that instead of creating a new environment, we update the base
+    # environment, which is activated by default.
     if [ -f "/opt/environment_versioned.yml" ]; then
-        mamba env create --file /opt/environment_versioned.yml
+        mamba update --prefix ${CONDA_DIR} --file /opt/environment_versioned.yml
     else
-        # Create env and save information to a file
-        mamba env create --file /opt/environment.yml
-        mamba env export --name base > /opt/environment_versioned.yml
+        # Update environment and save information to a file
+        mamba update --prefix ${CONDA_DIR} --file /opt/environment.yml
+        mamba export --prefix ${CONDA_DIR} > /opt/environment_versioned.yml
     fi
 
     # add executable flag to executables
