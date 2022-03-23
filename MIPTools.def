@@ -95,11 +95,11 @@ From: amd64/ubuntu:20.04
     # Note that instead of creating a new environment, we update the base
     # environment, which is activated by default.
     if [ -f "/opt/environment_versioned.yml" ]; then
-        mamba update --prefix ${CONDA_DIR} --file /opt/environment_versioned.yml
+        mamba env update --prefix ${CONDA_DIR} --file /opt/environment_versioned.yml
     else
         # Update environment and save information to a file
-        mamba update --prefix ${CONDA_DIR} --file /opt/environment.yml
-        mamba export --prefix ${CONDA_DIR} > /opt/environment_versioned.yml
+        mamba env update --prefix ${CONDA_DIR} --file /opt/environment.yml
+        mamba env export --prefix ${CONDA_DIR} > /opt/environment_versioned.yml
     fi
 
     # add executable flag to executables
